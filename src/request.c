@@ -28,23 +28,43 @@ int parse_request_headers(Request *r);
  * The returned request struct must be deallocated using free_request.
  **/
 Request * accept_request(int sfd) {
-    Request *r;
     struct sockaddr raddr;
-    socklen_t rlen;
+    socklen_t rlen = sizeof(struct sockaddr);
 
     /* Allocate request struct (zeroed) */
+    Request *r = calloc(1, sizeof(Request));
+    if (!r){
+      debug("Unable to allocate requests: %s", strerror(errno));
+      goto fail;
+    }
 
     /* Accept a client */
+    r->fd = accept(sfd, &raddr, &rlen);
+    if (r->fd < 0){
+      debug("Unable to accept: %s", strerror(errno));
+      goto fail;
+    }
 
-    /* Lookup client information */
+    /* Lookup client information */  //NI_NUMERICHOST (ip Address) | NI_NUMERICSERV (port #) of client
+    int status = getnameinfo(&raddr, rlen, r->host, sizeof(r->host), r->port, sizeof(r->port), NI_NUMERICHOST | NI_NUMERICSERV );
+    if(status <0 ){
+      debug("Unable to getnameinfo: %s", gai_strerror(status) );
+      goto fail;
+    }
 
     /* Open socket stream */
+    r->stream = fdopen(r->fd, "w+");
+    if(!r->stream){
+      debug("Unable to fdopen: %s", strerror(errno));
+      goto fail;
+    }
 
     log("Accepted request from %s:%s", r->host, r->port);
     return r;
 
 fail:
     /* Deallocate request struct */
+    free_request(r);
     return NULL;
 }
 
@@ -66,12 +86,15 @@ void free_request(Request *r) {
     }
 
     /* Close socket or fd */
+    fclose(r->stream);// for file stream
+    //close(r->fd); //for file descriptor
 
     /* Free allocated strings */
 
     /* Free headers */
 
     /* Free request */
+    free(r);
 }
 
 /**
@@ -114,8 +137,17 @@ int parse_request_method(Request *r) {
     char *query;
 
     /* Read line from socket */
+    char buffer[BUFSIZ];
+    if (!fgets(buffer, BUFSIZ, r->stream)){
+      return HTTP_STATUS_BAD_REQUEST;
+    }
+      /* Parse method and uri */
+    char *method = strtok(buffer, WHITESPACE);
+    char *uri    = strtok(NULL  , WHITESPACE);
 
-    /* Parse method and uri */
+    if(!method || !uri){
+      return HTTP_STATUS_BAD_REQUEST;
+    }
 
     /* Parse query from uri */
 
@@ -164,6 +196,9 @@ int parse_request_headers(Request *r) {
     char *data;
 
     /* Parse headers from socket */
+      while(fgets(buffer, BUFSIZ, r->stream) && strlen(buffer) > 2){
+        debug("Header: %s", buffer);
+      }
 
 #ifndef NDEBUG
     for (Header *header = r->headers; header; header = header->next) {
