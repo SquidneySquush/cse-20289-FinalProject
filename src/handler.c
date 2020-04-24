@@ -32,6 +32,15 @@ Status  handle_request(Request *r) {
 
     /* Parse request */
 
+
+
+    /* HANDLER TEST*/
+    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+    fprintf(r->stream, "Content-Type: text/html\r\n");
+    fprintf(r->stream, "\r\n");
+
+    fprintf(r->stream, "<h1>I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Monty Python </h1>");
+
     /* Determine request path */
     debug("HTTP REQUEST PATH: %s", r->path);
 
