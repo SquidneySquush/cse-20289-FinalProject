@@ -27,7 +27,19 @@ def hammer(url, throws, verbose, hid):
 
     Return the average elapsed time of all the throws.
     '''
-    return 0
+    total_time = 0
+    for i in range(throws):
+        timer = time.time()
+        r = requests.get(url)
+        if verbose:
+            print(r.text)
+        timer = time.time() - timer
+        total_time = total_time + timer
+        print(f'Hammer: {hid}, Throw:   {i}, Elapsed Time: {timer:.2f}')
+    print(f'Hammer: {hid}, AVERAGE   , Elapsed Time: {total_time:.2f}')
+
+    return total_time
+
 
 def do_hammer(args):
     ''' Use args tuple to call `hammer` '''
@@ -37,12 +49,30 @@ def main():
     hammers = 1
     throws  = 1
     verbose = False
+    arguments = sys.argv[1:]
 
     # Parse command line arguments
-    pass
+    while arguments:
+        if arguments[0] == '-h':
+            hammers = int(arguments[1])
+            arguments.pop(0)
+        elif arguments[0] == '-t':
+            throws = int(arguments[1])
+            arguments.pop(0)
+        elif arguments[0] == '-v':
+            verbose = True
+        else:
+            if not len(arguments) == 1:
+                usage(1)
+            else:
+                url = arguments[0]
+        arguments.pop(0)
 
     # Create pool of workers and perform throws
-    pass
+    args = ((url, throws, verbose, hid) for hid in range(hammers)) 
+
+    with concurrent.futures.ProcessPoolExecutor(hammers) as executor:
+        executor.map(do_hammer, args)
 
 # Main execution
 
