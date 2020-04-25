@@ -52,6 +52,8 @@ def main():
     arguments = sys.argv[1:]
 
     # Parse command line arguments
+    if not arguments:
+        usage(1)
     while arguments:
         if arguments[0] == '-h':
             hammers = int(arguments[1])
