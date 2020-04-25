@@ -72,7 +72,11 @@ def main():
     args = ((url, throws, verbose, hid) for hid in range(hammers)) 
 
     with concurrent.futures.ProcessPoolExecutor(hammers) as executor:
-        executor.map(do_hammer, args)
+        times = executor.map(do_hammer, args)
+
+    average = sum(times)/(hammers*throws)
+    print(f'TOTAL AVERAGE ELAPSED TIME: {average:.2f}')
+
 
 # Main execution
 
