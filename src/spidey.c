@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
     ServerMode mode;
 
     /* Parse command line options */
-    //parse_options(argc, argv, mode);
+    parse_options(argc, argv, &mode);
 
     /* Listen to server socket */
     int server_fd = socket_listen(Port);
@@ -102,10 +102,13 @@ int main(int argc, char *argv[]) {
     debug("RootPath        = %s", RootPath);
     debug("MimeTypesPath   = %s", MimeTypesPath);
     debug("DefaultMimeType = %s", DefaultMimeType);
-    //debug("ConcurrencyMode = %s", mode == SINGLE ? "Single" : "Forking");
+    debug("ConcurrencyMode = %s", mode == SINGLE ? "Single" : "Forking");
 
     /* Start either forking or single HTTP server */
-    single_server(server_fd);
+    if(mode == SINGLE)
+        single_server(server_fd);
+    else
+        forking_server(server_fd);
 
     return EXIT_SUCCESS; // changed from status b/c compile error
 }
