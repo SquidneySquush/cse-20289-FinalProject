@@ -113,8 +113,11 @@ void free_request(Request *r) {
  **/
 int parse_request(Request *r) {
     /* Parse HTTP Request Method */
+    parse_request_method(r);
 
     /* Parse HTTP Request Headers*/
+    parse_request_headers(r);
+
     return 0;
 }
 

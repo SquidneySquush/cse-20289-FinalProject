@@ -31,6 +31,7 @@ Status  handle_request(Request *r) {
     Status result;
 
     /* Parse request */
+    parse_request(r);
 
 
 
