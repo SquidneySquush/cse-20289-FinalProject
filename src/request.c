@@ -132,12 +132,9 @@ int parse_request(Request *r) {
  **/
 int parse_request_method(Request *r) {
     char buffer[BUFSIZ];
-    char *method;
-    char *uri;
     char *query;
 
     /* Read line from socket */
-    char buffer[BUFSIZ];
     if (!fgets(buffer, BUFSIZ, r->stream)){
       return HTTP_STATUS_BAD_REQUEST;
     }
