@@ -39,11 +39,23 @@ char * determine_mimetype(const char *path) {
     FILE *fs = NULL;
 
     /* Find file extension */
+    ext = strdup(strchr(path, (int)'.')+1);
+    debug("File extension: %s", exit);
 
     /* Open MimeTypesPath file */
+    fs = fopen(MimeTypesPath, "r");
 
     /* Scan file for matching file extensions */
-    return NULL;
+    while(fgets(buffer, BUFSIZ, fs)) {
+        if(strstr(buffer, ext)) {
+            mimetype = strtok(buffer, WHITESPACE);
+            break;
+        }
+    }
+
+    fclose(fs);
+    free(ext);
+    return mimetype;
 }
 
 /**
@@ -63,7 +75,12 @@ char * determine_mimetype(const char *path) {
  * string must later be free'd.
  **/
 char * determine_request_path(const char *uri) {
-    return NULL;
+
+    char* real = realpath(uri, NULL);
+    if(!(strstr(real, RootPath) == real)) {
+        return NULL;
+    }
+    return real;
 }
 
 /**
@@ -83,15 +100,9 @@ const char * http_status_string(Status status) {
         "418 I'm A Teapot",
     };
 
-/*
-  if (status < sizeof(StatusStrings) / sizeof(char *)){
-    return StatusStrings[status];
-  }
-  else{
-    return NULL;
-  }
-  */
-
+    if (status < sizeof(StatusStrings) / sizeof(char *)){
+        return StatusStrings[status];
+    }
     return NULL;
 }
 
@@ -102,6 +113,7 @@ const char * http_status_string(Status status) {
  * @return  Point to first whitespace character in s.
  **/
 char * skip_nonwhitespace(char *s) {
+    for(s; !isspace(*s); s++);
     return s;
 }
 
@@ -112,7 +124,9 @@ char * skip_nonwhitespace(char *s) {
  * @return  Point to first non-whitespace character in s.
  **/
 char * skip_whitespace(char *s) {
+    for(s; isspace(*s); s++);
     return s;
 }
+
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */
