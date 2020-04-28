@@ -126,14 +126,22 @@ Status  handle_cgi_request(Request *r) {
 
     /* Export CGI environment variables from request:
      * http://en.wikipedia.org/wiki/Common_Gateway_Interface */
+    setenv("QUERY_STRING", r->query, 1);
 
     /* Export CGI environment variables from request headers */
 
     /* POpen CGI Script */
+    pfs = popen("www/scripts/cowsay.sh" ,"r");
 
     /* Copy data from popen to socket */
+    size_t nread = fread(buffer, 1, BUFSIZ, pfs);
+    while(nread > 0) {
+        fwrite(buffer, 1, nread, r->stream);
+        nread = fread(buffer, 1, BUFSIZ, pfs);
+    }
 
     /* Close popen, return OK */
+    pclose(pfs);
     return HTTP_STATUS_OK;
 }
 

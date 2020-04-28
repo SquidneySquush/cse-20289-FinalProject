@@ -90,8 +90,13 @@ void free_request(Request *r) {
     //close(r->fd); //for file descriptor
 
     /* Free allocated strings */
+    free(r->method);
+    free(r->uri);
+    free(r->path);
+    free(r->query);
 
     /* Free headers */
+    free(r->headers);
 
     /* Free request */
     free(r);
@@ -109,7 +114,7 @@ void free_request(Request *r) {
 int parse_request(Request *r) {
     /* Parse HTTP Request Method */
 
-    /* Parse HTTP Requet Headers*/
+    /* Parse HTTP Request Headers*/
     return 0;
 }
 
@@ -132,7 +137,6 @@ int parse_request(Request *r) {
  **/
 int parse_request_method(Request *r) {
     char buffer[BUFSIZ];
-    char *query;
 
     /* Read line from socket */
     if (!fgets(buffer, BUFSIZ, r->stream)){
@@ -147,8 +151,18 @@ int parse_request_method(Request *r) {
     }
 
     /* Parse query from uri */
+    char *query = strchr(uri, '?');
+    if(!query) {
+        query = "";
+    } else {
+        *query++ = '\0';
+    }
 
     /* Record method, uri, and query in request struct */
+    r->method = method;
+    r->uri    = uri;
+    r->query  = query;
+
     debug("HTTP METHOD: %s", r->method);
     debug("HTTP URI:    %s", r->uri);
     debug("HTTP QUERY:  %s", r->query);
