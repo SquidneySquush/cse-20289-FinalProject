@@ -37,8 +37,8 @@ int forking_server(int sfd) {
             log("Unable to create child process: %s", strerror(errno));
         }
         else if(pid == 0) {
+            close(sfd);
             handle_request(request);
-            free_request(request);
             exit(EXIT_SUCCESS);
         }
         else {
