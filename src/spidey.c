@@ -99,8 +99,9 @@ int main(int argc, char *argv[]) {
     }
 
     /* Determine real RootPath */
-    realpath(RootPath, RootPath);
-    debug("RootPath: %s", RootPath);
+    char buffer[BUFSIZ];
+    if(!(RootPath = realpath(RootPath, buffer)))
+        debug("Error setting real RootPath: %s", strerror(errno));
 
     log("Listening on port %s", Port);
     debug("RootPath        = %s", RootPath);
