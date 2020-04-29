@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
     debug("RootPath        = %s", RootPath);
     debug("MimeTypesPath   = %s", MimeTypesPath);
     debug("DefaultMimeType = %s", DefaultMimeType);
-    debug("ConcurrencyMode = %s", mode == FORKING ? "Forking" : "Single");
+    debug("ConcurrencyMode = %s", mode == SINGLE ? "Single" : "Forking");
 
     /* Start either forking or single HTTP server */
     if(mode == SINGLE)

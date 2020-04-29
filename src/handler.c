@@ -42,20 +42,24 @@ Status  handle_request(Request *r) {
     debug("HTTP REQUEST PATH: %s", r->path);
 
     /* Dispatch to appropriate request handler type based on file type */
-
   struct stat s;
-  if( stat(r->path, &s) || !S_ISDIR(s.st_mode)){
+
+  if( stat(r->path, &s) || S_ISDIR(s.st_mode)){
+    debug("directory");
     result = handle_browse_request( r );
   }
-  if(stat(r->path, &s) || !S_ISREG(s.st_mode)){
+  else if(stat(r->path, &s) || S_ISREG(s.st_mode)){
+    debug("%d",s.st_mode);
+    debug("file");
     result = handle_file_request( r );
   }
-  if(access((r->path), X_OK) == 0 ){
+  else if(access((r->path), X_OK) == 0 ){
+    debug("cgi");
     result = handle_cgi_request( r );
   }
-  //else{
-  //  result = handle_error( r , result );
-  //}
+  else{
+    result = handle_error( r , HTTP_STATUS_BAD_REQUEST );
+  }
   log("HTTP REQUEST STATUS: %s", http_status_string(result));
 
     return result;
