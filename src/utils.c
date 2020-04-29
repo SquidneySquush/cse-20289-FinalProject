@@ -34,7 +34,7 @@
 char * determine_mimetype(const char *path) {
     char *ext;
     char *mimetype;
-  //  char *token;
+    char *token;
     char buffer[BUFSIZ];
     FILE *fs = NULL;
 

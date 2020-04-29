@@ -241,9 +241,9 @@ int parse_request_headers(Request *r) {
       }
   #endif
       return 0;
-/*
+
   fail:
-      return -1; */
+      return -1; 
 }
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */
