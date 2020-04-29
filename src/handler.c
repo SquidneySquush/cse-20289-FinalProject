@@ -32,31 +32,35 @@ Status  handle_request(Request *r) {
 
     /* Parse request */
     parse_request(r);
-   
-    debug("uri: %s", r->uri); 
+
     /* Determine request path */
     r->path = determine_request_path( r->uri );
+    if(!(r->path)){
+      debug("Cannot determine request path");
+      handle_error(r, HTTP_STATUS_NOT_FOUND);
+    }
     debug("HTTP REQUEST PATH: %s", r->path);
 
     /* Dispatch to appropriate request handler type based on file type */
-    log("HTTP REQUEST STATUS: %s", http_status_string(result));
+  struct stat s;
 
-    if(access((r->path), X_OK) == 0 ){
-      result = handle_cgi_request( r );
-    }
-    else{
-      struct stat s;
-      if( stat(r->path, &s) || !S_ISDIR(s.st_mode)){
-        result = handle_browse_request( r );
-      }
-      if(stat(r->path, &s) || !S_ISREG(s.st_mode)){
-        result = handle_file_request( r );
-      }
-      else{
-        result = handle_error( r , result );
-      }
-    }
-
+  if( stat(r->path, &s) || S_ISDIR(s.st_mode)){
+    debug("directory");
+    result = handle_browse_request( r );
+  }
+  else if(stat(r->path, &s) || S_ISREG(s.st_mode)){
+    debug("%d",s.st_mode);
+    debug("file");
+    result = handle_file_request( r );
+  }
+  else if(access((r->path), X_OK) == 0 ){
+    debug("cgi");
+    result = handle_cgi_request( r );
+  }
+  else{
+    result = handle_error( r , HTTP_STATUS_BAD_REQUEST );
+  }
+  log("HTTP REQUEST STATUS: %s", http_status_string(result));
 
     return result;
 }
@@ -80,7 +84,7 @@ Status  handle_browse_request(Request *r) {
   n = scandir(r->path, &entries, 0, alphasort);
   if (!n) {
     debug("Could not scan directory: %s", strerror(errno));
-    return HTTP_STATUS_NOT_FOUND;
+      handle_error(r, HTTP_STATUS_NOT_FOUND);
   }
 
   /* Write HTTP Header with OK Status and text/html Content-Type */
@@ -124,11 +128,14 @@ Status  handle_file_request(Request *r) {
     FILE *fs = fopen( r->path , "r");   // TODO:  make sure you wanna open r
     if( !fs ){
       debug("Unable to open file: %s", strerror(errno));
-      goto fail;
+      handle_error(r, HTTP_STATUS_NOT_FOUND);
     }
 
     /* Determine mimetype */
     mimetype =  determine_mimetype(r->path);
+    if( !mimetype ){
+      goto fail;
+    }
 
     /* Write HTTP Headers with OK status and determined Content-Type */
     fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
@@ -178,6 +185,10 @@ Status  handle_cgi_request(Request *r) {
 
     /* POpen CGI Script */
     pfs = popen("www/scripts/cowsay.sh" ,"r");
+    if (!pfs){
+      debug("Can't popen file: %s", strerror(errno));
+      handle_error(r,  HTTP_STATUS_INTERNAL_SERVER_ERROR);
+    }
 
     /* Copy data from popen to socket */
     size_t nread = fread(buffer, 1, BUFSIZ, pfs);
@@ -204,7 +215,7 @@ Status  handle_error(Request *r, Status status) {
     const char *status_string = http_status_string(status);
 
     /* Write HTTP Header */
-    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+    fprintf(r->stream, "HTTP/1.0 %s\r\n", status_string);
     fprintf(r->stream, "Content-Type: text/html\r\n");
     fprintf(r->stream, "\r\n");
 
