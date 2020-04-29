@@ -172,8 +172,8 @@ int parse_request_method(Request *r) {
 
     return 0;
 
-fail:
-    return -1;
+/*fail:
+    return -1; */
 }
 
 /**
@@ -204,25 +204,25 @@ fail:
  *      headers.append(header)
  **/
 int parse_request_headers(Request *r) {
-    Header *curr = NULL;
+  //  Header *curr = NULL;
     char buffer[BUFSIZ];
-    char *name;
-    char *data;
+  //  char *name;
+  //  char *data;
 
     /* Parse headers from socket */
       while(fgets(buffer, BUFSIZ, r->stream) && strlen(buffer) > 2){
         debug("Header: %s", buffer);
       }
 
-#ifndef NDEBUG
-    for (Header *header = r->headers; header; header = header->next) {
-    	debug("HTTP HEADER %s = %s", header->name, header->data);
-    }
-#endif
-    return 0;
-
-fail:
-    return -1;
+  #ifndef NDEBUG
+      for (Header *header = r->headers; header; header = header->next) {
+      	debug("HTTP HEADER %s = %s", header->name, header->data);
+      }
+  #endif
+      return 0;
+/*
+  fail:
+      return -1; */
 }
 
 /* vim: set expandtab sts=4 sw=4 ts=8 ft=c: */

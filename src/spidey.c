@@ -50,9 +50,10 @@ bool parse_options(int argc, char *argv[], ServerMode *mode) {
     	switch (arg[1]) {
 	    case 'c':
 	    	if (streq(argv[argind], "single")) {
-	    	    *mode = SINGLE;
-                } else if (streq(argv[argind], "forking")) {
-	    	    *mode = FORKING;
+	    	  *mode = SINGLE;
+        }
+        else if (streq(argv[argind], "forking")) {
+	    	  *mode = FORKING;
 	    	} else {
 	    	    return false;
 	    	}
@@ -102,7 +103,7 @@ int main(int argc, char *argv[]) {
     debug("RootPath        = %s", RootPath);
     debug("MimeTypesPath   = %s", MimeTypesPath);
     debug("DefaultMimeType = %s", DefaultMimeType);
-    debug("ConcurrencyMode = %s", mode == SINGLE ? "Single" : "Forking");
+    debug("ConcurrencyMode = %s", mode == FORKING ? "Forking" : "Single");
 
     /* Start either forking or single HTTP server */
     if(mode == SINGLE)

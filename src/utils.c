@@ -34,13 +34,13 @@
 char * determine_mimetype(const char *path) {
     char *ext;
     char *mimetype;
-    char *token;
+  //  char *token;
     char buffer[BUFSIZ];
     FILE *fs = NULL;
 
     /* Find file extension */
     ext = strdup(strchr(path, (int)'.')+1);
-    debug("File extension: %s", exit);
+    debug("File extension: %s", ext);
 
     /* Open MimeTypesPath file */
     fs = fopen(MimeTypesPath, "r");

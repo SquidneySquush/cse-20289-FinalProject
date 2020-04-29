@@ -31,34 +31,29 @@ Status  handle_request(Request *r) {
     Status result;
 
     /* Parse request */
-    parse_request(r);
-
-
-
-    /* HANDLER TEST*/
-    //fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
-  //  fprintf(r->stream, "Content-Type: text/html\r\n");
-//    fprintf(r->stream, "\r\n");
-
-    //fprintf(r->stream, "<h1>I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Monty Python </h1>\n");
+    r = parse_request(r);
 
     /* Determine request path */
-    char* r->path = determine_request_path( r->uri );
+    r->path = determine_request_path( r->uri );
     debug("HTTP REQUEST PATH: %s", r->path);
 
     /* Dispatch to appropriate request handler type based on file type */
     log("HTTP REQUEST STATUS: %s", http_status_string(result));
 
-    if(access(result->path), X_OK) == 0){
-      handle_cgi_request( r );
+    if(access((r->path), X_OK) == 0 ){
+      result = handle_cgi_request( r );
     }
     else{
-      struct stat stat;
-      if( stat(r->path, &stat) || !S_ISDIR(stat.st_mode)){
-        handle_browse_request( r );
+      struct stat s;
+      if( stat(r->path, &s) || !S_ISDIR(s.st_mode)){
+        result = handle_browse_request( r );
       }
-
-      handle_file_request( r );
+      if(stat(r->path, &s) || !S_ISREG(s.st_mode)){
+        result = handle_file_request( r );
+      }
+      else{
+        result = handle_error( r , result );
+      }
     }
 
 
@@ -77,28 +72,35 @@ Status  handle_request(Request *r) {
  * with HTTP_STATUS_NOT_FOUND.
  **/
 Status  handle_browse_request(Request *r) {
-    struct dirent **entries;
-    int n;
+  struct dirent **entries;
+  int n;
 
-    /* Open a directory for reading or scanning */
-    DIR *d = opendir(r->path);
-    if (!d) {
-        fprintf(stderr, "Unable to open directory on %s: %s\n", path, strerror(errno));
-        return EXIT_FAILURE;
-    }
+  /* Open a directory for reading or scanning */
+  n = scandir(r->path, &entries, 0, alphasort);
+  if (!n) {
+    debug("Could not scan directory: %s", strerror(errno));
+    return HTTP_STATUS_NOT_FOUND;
+  }
 
-    /* Write HTTP Header with OK Status and text/html Content-Type */
-    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
-    fprintf(r->stream, "Content-Type: text/html\r\n");
-    fprintf(r->stream, "\r\n");
+  /* Write HTTP Header with OK Status and text/html Content-Type */
+  fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+  fprintf(r->stream, "Content-Type: text/html\r\n");
+  fprintf(r->stream, "\r\n");
 
-    /* For each entry in directory, emit HTML list item */
-    for (*entries = readdir(d); e; e = scandir(d)) {
-
-    }
-
-    /* Return OK */
-    return HTTP_STATUS_OK;
+  /* For each entry in directory, emit HTML list item */
+  fprintf(r->stream, "<ul>\n");
+  for( int i = 0; i < n; i++){
+    if ((streq(entries[i]->d_name, ".")) || (streq(entries[i]->d_name, ".."))) {
+        free(entries[i]);
+        continue;
+        }
+    fprintf(r->stream, "<li>%s</li>\n", entries[i]->d_name);
+    free(entries[i]);
+  }
+  free(entries);
+  fprintf(r->stream, "<ul>\n");
+  /* Return OK */
+  return HTTP_STATUS_OK;
 }
 
 /**
@@ -117,14 +119,14 @@ Status  handle_file_request(Request *r) {
     size_t nread;
 
     /* Open file for reading */
-    File *fs = fopen( r , "r")   // TODO:  make sure you wanna open r
+    FILE *fs = fopen( r->path , "r");   // TODO:  make sure you wanna open r
     if( !fs ){
       debug("Unable to open file: %s", strerror(errno));
       goto fail;
     }
 
     /* Determine mimetype */
-    mimetype =  determine_mimetype(r)
+    mimetype =  determine_mimetype(r->path);
 
     /* Write HTTP Headers with OK status and determined Content-Type */
     fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
