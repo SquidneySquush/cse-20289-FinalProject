@@ -179,15 +179,35 @@ Status  handle_cgi_request(Request *r) {
 
     /* Export CGI environment variables from request:
      * http://en.wikipedia.org/wiki/Common_Gateway_Interface */
-    setenv("QUERY_STRING", r->query, 1);
+    setenv("QUERY_STRING",   r->query, 1);
+    setenv("DOCUMENT_ROOT",  RootPath, 1);
+    setenv("REMOTE_ADDR",    r->host, 1);
+    setenv("REMOTE_PORT",    r->port, 1);
+    setenv("REQUEST_METHOD", r->method, 1);
+    setenv("REQUEST_URI",    r->uri, 1);
+    setenv("SCRIPT_FILENAME",r->path, 1);
+    setenv("SERVER_PORT",    Port, 1);
 
     /* Export CGI environment variables from request headers */
+    for(Header* h = r->headers; h; h = h->next) {
+        char var_name[BUFSIZ];
+        char *temp = strdup(h->name);
+        for(char *c = temp; *c; c++) {
+            if(*c == '-')
+                *c = '_';
+            else
+                *c = toupper(*c);
+        }
+
+        sprintf(var_name, "HTTP_%s", temp); 
+        setenv(var_name, h->data, 1);
+        free(temp);
+    }
 
     /* POpen CGI Script */
-    pfs = popen("www/scripts/cowsay.sh" ,"r");
-    if (!pfs){
-      debug("Can't popen file: %s", strerror(errno));
-      handle_error(r,  HTTP_STATUS_INTERNAL_SERVER_ERROR);
+    pfs = popen(r->path ,"r");
+    if(!pfs) {
+        return HTTP_STATUS_INTERNAL_SERVER_ERROR;
     }
 
     /* Copy data from popen to socket */

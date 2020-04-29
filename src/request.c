@@ -99,6 +99,8 @@ void free_request(Request *r) {
     Header *h = r->headers;
     while(h) {
         Header *temp = h;
+        free(h->name); 
+        free(h->data);
         h = h->next;
         free(temp);
     }
@@ -218,7 +220,7 @@ int parse_request_headers(Request *r) {
 
     /* Parse headers from socket */
     while(fgets(buffer, BUFSIZ, r->stream) && strlen(buffer) > 2){
-        curr = malloc(sizeof(Header));
+        curr = calloc(1, sizeof(Header));
         if(!curr)
             goto fail;
         if(prev)
@@ -233,7 +235,6 @@ int parse_request_headers(Request *r) {
 
         prev = curr;
     }
-    curr->next = NULL;
 
   #ifndef NDEBUG
       for (Header *header = r->headers; header; header = header->next) {
