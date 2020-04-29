@@ -31,8 +31,9 @@ Status  handle_request(Request *r) {
     Status result;
 
     /* Parse request */
-    r = parse_request(r);
-    
+    parse_request(r);
+   
+    debug("uri: %s", r->uri); 
     /* Determine request path */
     r->path = determine_request_path( r->uri );
     debug("HTTP REQUEST PATH: %s", r->path);

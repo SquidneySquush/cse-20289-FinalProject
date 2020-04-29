@@ -167,9 +167,9 @@ int parse_request_method(Request *r) {
     }
 
     /* Record method, uri, and query in request struct */
-    r->method = method;
-    r->uri    = uri;
-    r->query  = query;
+    r->method = strdup(method);
+    r->uri    = strdup(uri);
+    r->query  = strdup(query);
 
     debug("HTTP METHOD: %s", r->method);
     debug("HTTP URI:    %s", r->uri);
@@ -218,7 +218,6 @@ int parse_request_headers(Request *r) {
 
     /* Parse headers from socket */
     while(fgets(buffer, BUFSIZ, r->stream) && strlen(buffer) > 2){
-        debug("Header: %s", buffer);
         curr = malloc(sizeof(Header));
         if(!curr)
             goto fail;
@@ -228,12 +227,13 @@ int parse_request_headers(Request *r) {
             r->headers = curr;
 
         name = strtok(buffer, ":");
-        data = strtok(NULL, WHITESPACE);
+        data = strtok(NULL, "\n");
         curr->name = strdup(name);
         curr->data = strdup(data);
 
         prev = curr;
     }
+    curr->next = NULL;
 
   #ifndef NDEBUG
       for (Header *header = r->headers; header; header = header->next) {

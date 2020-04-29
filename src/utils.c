@@ -79,11 +79,12 @@ char * determine_mimetype(const char *path) {
  **/
 char * determine_request_path(const char *uri) {
 
-    char* real = realpath(uri, NULL);
-    if(!(strstr(real, RootPath) == real)) {
-        return NULL;
-    }
-    return real;
+    char path[BUFSIZ];
+    sprintf(path, "%s%s", RootPath, uri);
+    char* absolute = realpath(path, NULL);
+    debug("path: %s", absolute);
+
+    return absolute;    
 }
 
 /**
