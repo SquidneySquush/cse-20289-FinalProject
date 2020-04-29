@@ -44,14 +44,15 @@ Status  handle_request(Request *r) {
     /* Dispatch to appropriate request handler type based on file type */
   struct stat s;
 
-  if( stat(r->path, &s) || S_ISDIR(s.st_mode)){
-    debug("directory");
-    result = handle_browse_request( r );
-  }
-  else if(stat(r->path, &s) || S_ISREG(s.st_mode)){
-    debug("%d",s.st_mode);
-    debug("file");
-    result = handle_file_request( r );
+  if(stat(r->path, &s) == 0){
+    if( S_ISDIR(s.st_mode)){
+      debug("directory");
+      result = handle_browse_request( r );
+    }
+    else {
+      debug("file");
+      result = handle_file_request( r );
+    }
   }
   else if(access((r->path), X_OK) == 0 ){
     debug("cgi");
@@ -144,14 +145,15 @@ Status  handle_file_request(Request *r) {
 
     /* Read from file and write to socket in chunks */
     char buffer[BUFSIZ];
-
-    while ((nread = fread(buffer, 1, BUFSIZ, fs)) > 0 ){
+    nread = fread(buffer, 1, BUFSIZ, fs);
+    while (nread > 0 ){
       fwrite(buffer, 1, nread, r->stream);
+      nread = fread(buffer, 1, BUFSIZ, fs);
     }
 
     /* Close file, deallocate mimetype, return OK */
-    free(mimetype);
     fclose(fs);
+    free(mimetype);
     return HTTP_STATUS_OK;
 
 fail:

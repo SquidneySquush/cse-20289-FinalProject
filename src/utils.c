@@ -54,7 +54,12 @@ char * determine_mimetype(const char *path) {
             break;
         }
     }
-    mimetype = strdup(token);
+    if (token){
+      mimetype = strdup(token);
+    }
+    else{
+      mimetype = DefaultMimeType;
+    }
 
     fclose(fs);
     free(ext);
@@ -78,12 +83,11 @@ char * determine_mimetype(const char *path) {
  * string must later be free'd.
  **/
 char * determine_request_path(const char *uri) {
-
     char path[BUFSIZ];
     sprintf(path, "%s%s", RootPath, uri);
     char* absolute = realpath(path, NULL);
 
-    return absolute;    
+    return absolute;
 }
 
 /**
