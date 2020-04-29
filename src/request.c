@@ -209,15 +209,12 @@ int parse_request_method(Request *r) {
  *      headers.append(header)
  **/
 int parse_request_headers(Request *r) {
-<<<<<<< HEAD
-  //  Header *curr = NULL;
-=======
+
     Header *curr = NULL;
     Header *prev = NULL;
->>>>>>> ef5500683265661839cf3adf237c48db3571aaf4
     char buffer[BUFSIZ];
-  //  char *name;
-  //  char *data;
+    char *name;
+    char *data;
 
     /* Parse headers from socket */
     while(fgets(buffer, BUFSIZ, r->stream) && strlen(buffer) > 2){
