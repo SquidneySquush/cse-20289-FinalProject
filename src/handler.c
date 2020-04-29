@@ -34,7 +34,6 @@ Status  handle_request(Request *r) {
     parse_request(r);
 
 
-
     /* HANDLER TEST*/
     fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
     fprintf(r->stream, "Content-Type: text/html\r\n");
@@ -67,10 +66,20 @@ Status  handle_browse_request(Request *r) {
     int n;
 
     /* Open a directory for reading or scanning */
-
+    if((n = scandir(".", &entries, 0, alphasort)) < 0)
+        debug("scandir failed: %s", strerror(errno));
+    
     /* Write HTTP Header with OK Status and text/html Content-Type */
+    fprintf(r->stream, "HTTP/1.0 200 OK \r\n");
+    fprintf(r->stream, "Content-Type: text/html\r\n");
+    fprintf(r->stream, "\r\n");
 
     /* For each entry in directory, emit HTML list item */
+    fprintf(r->stream, "<ol>\n");
+    for(int i = 0; i < n; i++) {
+        fprintf(r->stream, "<li>%s</li>", entries[i]->d_name);
+    }
+    fprintf(r->stream, "</ol>\n");
 
     /* Return OK */
     return HTTP_STATUS_OK;
