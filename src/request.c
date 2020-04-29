@@ -96,7 +96,12 @@ void free_request(Request *r) {
     free(r->query);
 
     /* Free headers */
-    free(r->headers);
+    Header *h = r->headers;
+    while(h) {
+        Header *temp = h;
+        h = h->next;
+        free(temp);
+    }
 
     /* Free request */
     free(r);
@@ -204,15 +209,34 @@ int parse_request_method(Request *r) {
  *      headers.append(header)
  **/
 int parse_request_headers(Request *r) {
+<<<<<<< HEAD
   //  Header *curr = NULL;
+=======
+    Header *curr = NULL;
+    Header *prev = NULL;
+>>>>>>> ef5500683265661839cf3adf237c48db3571aaf4
     char buffer[BUFSIZ];
   //  char *name;
   //  char *data;
 
     /* Parse headers from socket */
-      while(fgets(buffer, BUFSIZ, r->stream) && strlen(buffer) > 2){
+    while(fgets(buffer, BUFSIZ, r->stream) && strlen(buffer) > 2){
         debug("Header: %s", buffer);
-      }
+        curr = malloc(sizeof(Header));
+        if(!curr)
+            goto fail;
+        if(prev)
+            prev->next = curr;
+        else
+            r->headers = curr;
+
+        name = strtok(buffer, ":");
+        data = strtok(NULL, WHITESPACE);
+        curr->name = strdup(name);
+        curr->data = strdup(data);
+
+        prev = curr;
+    }
 
   #ifndef NDEBUG
       for (Header *header = r->headers; header; header = header->next) {

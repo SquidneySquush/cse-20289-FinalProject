@@ -31,7 +31,19 @@ Status  handle_request(Request *r) {
     Status result;
 
     /* Parse request */
+<<<<<<< HEAD
     r = parse_request(r);
+=======
+    parse_request(r);
+
+
+    /* HANDLER TEST*/
+    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+    fprintf(r->stream, "Content-Type: text/html\r\n");
+    fprintf(r->stream, "\r\n");
+
+    fprintf(r->stream, "<h1>I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Monty Python </h1>\n");
+>>>>>>> ef5500683265661839cf3adf237c48db3571aaf4
 
     /* Determine request path */
     r->path = determine_request_path( r->uri );
@@ -72,6 +84,7 @@ Status  handle_request(Request *r) {
  * with HTTP_STATUS_NOT_FOUND.
  **/
 Status  handle_browse_request(Request *r) {
+<<<<<<< HEAD
   struct dirent **entries;
   int n;
 
@@ -101,6 +114,29 @@ Status  handle_browse_request(Request *r) {
   fprintf(r->stream, "<ul>\n");
   /* Return OK */
   return HTTP_STATUS_OK;
+=======
+    struct dirent **entries;
+    int n;
+
+    /* Open a directory for reading or scanning */
+    if((n = scandir(".", &entries, 0, alphasort)) < 0)
+        debug("scandir failed: %s", strerror(errno));
+    
+    /* Write HTTP Header with OK Status and text/html Content-Type */
+    fprintf(r->stream, "HTTP/1.0 200 OK \r\n");
+    fprintf(r->stream, "Content-Type: text/html\r\n");
+    fprintf(r->stream, "\r\n");
+
+    /* For each entry in directory, emit HTML list item */
+    fprintf(r->stream, "<ol>\n");
+    for(int i = 0; i < n; i++) {
+        fprintf(r->stream, "<li>%s</li>", entries[i]->d_name);
+    }
+    fprintf(r->stream, "</ol>\n");
+
+    /* Return OK */
+    return HTTP_STATUS_OK;
+>>>>>>> ef5500683265661839cf3adf237c48db3571aaf4
 }
 
 /**

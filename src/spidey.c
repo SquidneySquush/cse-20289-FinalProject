@@ -99,6 +99,9 @@ int main(int argc, char *argv[]) {
     }
 
     /* Determine real RootPath */
+    realpath(RootPath, RootPath);
+    debug("RootPath: %s", RootPath);
+
     log("Listening on port %s", Port);
     debug("RootPath        = %s", RootPath);
     debug("MimeTypesPath   = %s", MimeTypesPath);

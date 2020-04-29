@@ -47,8 +47,11 @@ char * determine_mimetype(const char *path) {
 
     /* Scan file for matching file extensions */
     while(fgets(buffer, BUFSIZ, fs)) {
-        if(strstr(buffer, ext)) {
-            mimetype = strtok(buffer, WHITESPACE);
+        if(buffer[0] == '#')
+            continue;
+        mimetype = strtok(buffer, WHITESPACE);
+        token    = skip_nonwhitespace(buffer);
+        if(strstr(token, ext)) {
             break;
         }
     }
