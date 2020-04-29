@@ -49,12 +49,12 @@ char * determine_mimetype(const char *path) {
     while(fgets(buffer, BUFSIZ, fs)) {
         if(buffer[0] == '#')
             continue;
-        mimetype = strtok(buffer, WHITESPACE);
-        token    = skip_nonwhitespace(buffer);
-        if(strstr(token, ext)) {
+        token = strtok(buffer, WHITESPACE);
+        if(strstr(buffer, ext)) {
             break;
         }
     }
+    mimetype = strdup(token);
 
     fclose(fs);
     free(ext);
@@ -82,7 +82,6 @@ char * determine_request_path(const char *uri) {
     char path[BUFSIZ];
     sprintf(path, "%s%s", RootPath, uri);
     char* absolute = realpath(path, NULL);
-    debug("path: %s", absolute);
 
     return absolute;    
 }
