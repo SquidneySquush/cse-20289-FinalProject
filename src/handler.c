@@ -36,17 +36,31 @@ Status  handle_request(Request *r) {
 
 
     /* HANDLER TEST*/
-    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
-    fprintf(r->stream, "Content-Type: text/html\r\n");
-    fprintf(r->stream, "\r\n");
+    //fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+  //  fprintf(r->stream, "Content-Type: text/html\r\n");
+//    fprintf(r->stream, "\r\n");
 
-    fprintf(r->stream, "<h1>I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Monty Python </h1>\n");
+    //fprintf(r->stream, "<h1>I fart in your general direction! Your mother was a hamster and your father smelt of elderberries! Monty Python </h1>\n");
 
     /* Determine request path */
+    char* r->path = determine_request_path( r->uri );
     debug("HTTP REQUEST PATH: %s", r->path);
 
     /* Dispatch to appropriate request handler type based on file type */
     log("HTTP REQUEST STATUS: %s", http_status_string(result));
+
+    if(access(result->path), X_OK) == 0){
+      handle_cgi_request( r );
+    }
+    else{
+      struct stat stat;
+      if( stat(r->path, &stat) || !S_ISDIR(stat.st_mode)){
+        handle_browse_request( r );
+      }
+
+      handle_file_request( r );
+    }
+
 
     return result;
 }
@@ -67,10 +81,21 @@ Status  handle_browse_request(Request *r) {
     int n;
 
     /* Open a directory for reading or scanning */
+    DIR *d = opendir(r->path);
+    if (!d) {
+        fprintf(stderr, "Unable to open directory on %s: %s\n", path, strerror(errno));
+        return EXIT_FAILURE;
+    }
 
     /* Write HTTP Header with OK Status and text/html Content-Type */
+    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+    fprintf(r->stream, "Content-Type: text/html\r\n");
+    fprintf(r->stream, "\r\n");
 
     /* For each entry in directory, emit HTML list item */
+    for (*entries = readdir(d); e; e = scandir(d)) {
+
+    }
 
     /* Return OK */
     return HTTP_STATUS_OK;
@@ -88,24 +113,40 @@ Status  handle_browse_request(Request *r) {
  * HTTP_STATUS_NOT_FOUND.
  **/
 Status  handle_file_request(Request *r) {
-    FILE *fs;
-    char buffer[BUFSIZ];
     char *mimetype = NULL;
     size_t nread;
 
     /* Open file for reading */
+    File *fs = fopen( r , "r")   // TODO:  make sure you wanna open r
+    if( !fs ){
+      debug("Unable to open file: %s", strerror(errno));
+      goto fail;
+    }
 
     /* Determine mimetype */
+    mimetype =  determine_mimetype(r)
 
     /* Write HTTP Headers with OK status and determined Content-Type */
+    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+    fprintf(r->stream, "Content-Type: %s\r\n", mimetype);
+    fprintf(r->stream, "\r\n");
 
     /* Read from file and write to socket in chunks */
+    char buffer[BUFSIZ];
+
+    while ((nread = fread(buffer, 1, BUFSIZ, fs)) > 0 ){
+      fwrite(buffer, 1, nread, r->stream);
+    }
 
     /* Close file, deallocate mimetype, return OK */
+    free(mimetype);
+    fclose(fs);
     return HTTP_STATUS_OK;
 
 fail:
     /* Close file, free mimetype, return INTERNAL_SERVER_ERROR */
+    free(mimetype);
+    fclose(fs);
     return HTTP_STATUS_INTERNAL_SERVER_ERROR;
 }
 
@@ -159,8 +200,13 @@ Status  handle_error(Request *r, Status status) {
     const char *status_string = http_status_string(status);
 
     /* Write HTTP Header */
+    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+    fprintf(r->stream, "Content-Type: text/html\r\n");
+    fprintf(r->stream, "\r\n");
 
     /* Write HTML Description of Error*/
+    fprintf(r->stream, "%s\n", status_string);
+
 
     /* Return specified status */
     return status;
