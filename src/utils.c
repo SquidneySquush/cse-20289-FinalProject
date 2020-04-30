@@ -32,8 +32,8 @@
  * This function returns an allocated string that must be free'd.
  **/
 char * determine_mimetype(const char *path) {
-    char *ext;
-    char *mimetype;
+    char ext[256];
+    char *mimetype = NULL;
     char *token = NULL;
     char buffer[BUFSIZ];
     FILE *fs = NULL;
@@ -43,7 +43,7 @@ char * determine_mimetype(const char *path) {
         mimetype = strdup(DefaultMimeType);
         return mimetype;
     }
-    ext = strdup(strchr(path, (int)'.')+1);
+    sprintf(ext, "%s", strchr(path, (int)'.') + 1);
     debug("File extension: %s", ext);
 
     /* Open MimeTypesPath file */
@@ -54,23 +54,19 @@ char * determine_mimetype(const char *path) {
         if(buffer[0] == '#')
             continue;
 
-        if(strstr(buffer, ext)) {
-            token = buffer;
-            break;
+	token = strtok(buffer, WHITESPACE);
+
+        while((token = strtok(0, WHITESPACE))) {
+            if(!strcmp(token, ext))
+		mimetype = strdup(buffer);
         }
     }
-    if (token){
-        skip_nonwhitespace(token);
-        *token = '\0';
-        mimetype = strdup(buffer);
-    }
-    else{
+    if(!mimetype) {
         mimetype = strdup(DefaultMimeType);
     }
     debug("MIMETYPE: %s", mimetype);
 
     fclose(fs);
-    free(ext);
     return mimetype;
 }
 
@@ -128,7 +124,9 @@ const char * http_status_string(Status status) {
  * @return  Point to first whitespace character in s.
  **/
 char * skip_nonwhitespace(char *s) {
-    for(s; !isspace(*s); s++);
+    while(!isspace(*s)) {
+	s++;
+    }
     return s;
 }
 
@@ -139,7 +137,9 @@ char * skip_nonwhitespace(char *s) {
  * @return  Point to first non-whitespace character in s.
  **/
 char * skip_whitespace(char *s) {
-    for(s; isspace(*s); s++);
+    while(isspace(*s)) {
+        s++;
+    }
     return s;
 }
 
