@@ -32,13 +32,17 @@ Status  handle_request(Request *r) {
     Status result;
 
     /* Parse request */
-    parse_request(r);
+    if(parse_request(r) < 0) {
+        result = handle_error(r, HTTP_STATUS_BAD_REQUEST);
+        return result;
+    }
 
     /* Determine request path */
     r->path = determine_request_path( r->uri );
     if(!(r->path)){
       debug("Cannot determine request path");
-      handle_error(r, HTTP_STATUS_NOT_FOUND);
+      result = handle_error(r, HTTP_STATUS_NOT_FOUND);
+      return result;
     }
     debug("HTTP REQUEST PATH: %s", r->path);
 

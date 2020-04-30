@@ -120,12 +120,12 @@ void free_request(Request *r) {
  **/
 int parse_request(Request *r) {
     /* Parse HTTP Request Method */
-    parse_request_method(r);
+    int m = parse_request_method(r);
 
     /* Parse HTTP Request Headers*/
-    parse_request_headers(r);
+    int h = parse_request_headers(r);
 
-    return 0;
+    return m + h;
 }
 
 /**
@@ -150,14 +150,14 @@ int parse_request_method(Request *r) {
 
     /* Read line from socket */
     if (!fgets(buffer, BUFSIZ, r->stream)){
-      return HTTP_STATUS_BAD_REQUEST;
+        goto fail;
     }
       /* Parse method and uri */
     char *method = strtok(buffer, WHITESPACE);
     char *uri    = strtok(NULL  , WHITESPACE);
 
     if(!method || !uri){
-      return HTTP_STATUS_BAD_REQUEST;
+      goto fail;
     }
 
     /* Parse query from uri */
@@ -179,8 +179,8 @@ int parse_request_method(Request *r) {
 
     return 0;
 
-/*fail:
-    return -1; */
+fail:
+    return -1; 
 }
 
 /**
@@ -230,6 +230,9 @@ int parse_request_headers(Request *r) {
 
         name = strtok(buffer, ":");
         data = strtok(NULL, "\n");
+        if(!name || !data) {
+            goto fail;
+        }
         curr->name = strdup(name);
         curr->data = strdup(data);
 
