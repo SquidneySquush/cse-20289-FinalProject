@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <dirent.h>
 #include <sys/stat.h>
@@ -49,14 +50,14 @@ Status  handle_request(Request *r) {
       debug("directory");
       result = handle_browse_request( r );
     }
+    if(access((r->path), X_OK) == 0) {
+        debug("cgi");
+        result = handle_cgi_request(r);
+    }
     else {
       debug("file");
       result = handle_file_request( r );
     }
-  }
-  else if(access((r->path), X_OK) == 0 ){
-    debug("cgi");
-    result = handle_cgi_request( r );
   }
   else{
     result = handle_error( r , HTTP_STATUS_BAD_REQUEST );
@@ -89,7 +90,7 @@ Status  handle_browse_request(Request *r) {
   }
 
   /* Write HTTP Header with OK Status and text/html Content-Type */
-  fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+  fprintf(r->stream, "HTTP/1.0 200 OK\r\n");
   fprintf(r->stream, "Content-Type: text/html\r\n");
   fprintf(r->stream, "\r\n");
 
@@ -99,8 +100,14 @@ Status  handle_browse_request(Request *r) {
     if (streq(entries[i]->d_name, ".")) {
         free(entries[i]);
         continue;
-        }
-    fprintf(r->stream, "<li><a href=\"%s\">%s</a></li>\n", entries[i]->d_name,  entries[i]->d_name);
+    }
+    char buffer[512];
+    if(strcmp(r->uri, "/"))
+        sprintf(buffer, "%s/%s", r->uri, entries[i]->d_name);
+    else
+        sprintf(buffer, "%s%s", r->uri, entries[i]->d_name);
+    debug("Possible link: %s", buffer); 
+    fprintf(r->stream, "<li><a href=\"%s\">%s</a></li>\n", buffer,  entries[i]->d_name);
     free(entries[i]);
   }
   free(entries);
@@ -139,7 +146,7 @@ Status  handle_file_request(Request *r) {
     }
 
     /* Write HTTP Headers with OK status and determined Content-Type */
-    fprintf(r->stream, "HTTP/1.0 200 ok\r\n");
+    fprintf(r->stream, "HTTP/1.0 200 OK\r\n");
     fprintf(r->stream, "Content-Type: %s\r\n", mimetype);
     fprintf(r->stream, "\r\n");
 

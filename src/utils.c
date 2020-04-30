@@ -34,11 +34,15 @@
 char * determine_mimetype(const char *path) {
     char *ext;
     char *mimetype;
-    char *token;
+    char *token = NULL;
     char buffer[BUFSIZ];
     FILE *fs = NULL;
 
     /* Find file extension */
+    if(!strchr(path, (int)'.')) {
+        mimetype = strdup(DefaultMimeType);
+        return mimetype;
+    }
     ext = strdup(strchr(path, (int)'.')+1);
     debug("File extension: %s", ext);
 
@@ -49,17 +53,21 @@ char * determine_mimetype(const char *path) {
     while(fgets(buffer, BUFSIZ, fs)) {
         if(buffer[0] == '#')
             continue;
-        token = strtok(buffer, WHITESPACE);
+
         if(strstr(buffer, ext)) {
+            token = buffer;
             break;
         }
     }
     if (token){
-      mimetype = strdup(token);
+        skip_nonwhitespace(token);
+        *token = '\0';
+        mimetype = strdup(buffer);
     }
     else{
-      mimetype = DefaultMimeType;
+        mimetype = strdup(DefaultMimeType);
     }
+    debug("MIMETYPE: %s", mimetype);
 
     fclose(fs);
     free(ext);
