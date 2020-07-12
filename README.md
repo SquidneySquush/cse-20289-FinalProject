@@ -2,9 +2,6 @@
 
 This is the [Final Project] for [CSE 20289 Systems Programming (Spring 2020)].
 
-## Members
-
-- Erik Meier (emeier@nd.edu)
 - Sydney Hnat (shnat@nd.edu)
 
 ## Demonstration
